@@ -1,11 +1,17 @@
 import numpy as np
 import random as rd
+
+WIDTH = 1.0
+HEIGHT = 1.0
+PADDLE_WIDTH = 0.2
+PADDLE_HEIGHT = 0.05
+
 class Engine:
     def __init__(self):
-        self.width = 1.0
-        self.height = 1.0
-        self.paddle_width = 0.2
-        self.paddle_height = 0.05
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.paddle_width = PADDLE_WIDTH
+        self.paddle_height = PADDLE_HEIGHT
         
         self.max_lives = 3
         self.lives = 3
