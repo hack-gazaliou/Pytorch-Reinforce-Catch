@@ -6,7 +6,7 @@ HEIGHT = 1.0
 PADDLE_WIDTH = 0.2
 PADDLE_HEIGHT = 0.05
 
-class Engine:
+class engine:
     def __init__(self):
         self.width = WIDTH
         self.height = HEIGHT
