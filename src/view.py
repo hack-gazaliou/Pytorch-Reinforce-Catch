@@ -1,11 +1,11 @@
 import pygame
-import engine
+import Engine
 visualize = True
 
 class View:
     
     
-    def __init__(self, eng :engine):
+    def __init__(self, eng :Engine):
         self.engine = eng
         self.width = 640
         self.height = 700
@@ -18,7 +18,7 @@ class View:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 30)
         
-    def render (self, eng :engine) :
+    def render (self, eng :Engine) :
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -46,7 +46,7 @@ class View:
         return True
         
         
-def draw_ui(self, eng: engine):
+def draw_ui(self, eng: Engine):
     info_text = f"Step: {eng.current_step}"
     info_surf = self.font.render(info_text, True, self.colors['text'])
     self.screen.blit(info_surf, (10, 10))  # en haut à gauche

@@ -6,6 +6,7 @@ import torch.nn.functional as F   # Pour les fonctions d'activation (softmax, re
 import torch.optim as optim      # Pour l'optimiseur (Adam ou SGD)
 from torch.distributions import Categorical
 import engine
+from engine import engine
 
 hidden_sizes = [64, 64]
 n_acts = 5
@@ -40,7 +41,8 @@ def train_one_epoch():
     batch_lens = [] 
      
     obs = engine.reset()       
-    done = False            
+    done = False
+    visualize = True            
     ep_rews = []
 
     finished_rendering_this_epoch = False
