@@ -19,13 +19,14 @@ class agent(nn.Module) :
         return nn.Sequential(*layers)
         
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.hidden_sizes = [64, 64]
         self.n_acts = 5
         self.obs_dim = 9
         self.batch_size = 32 #to change if necessary
         self.policy_net = self.mlp(sizes=[self.obs_dim]+self.hidden_sizes+[self.n_acts], activation=nn.ReLU)
         self.optimizer = torch.optim.Adam(self.policy_net.parameters())
+        self.gamma = 0.99
     
     def get_policy(self,obs):
         logits = self.policy_net(obs)
@@ -70,8 +71,12 @@ class agent(nn.Module) :
                 batch_rets.append(ep_ret)
                 batch_lens.append(ep_len)
 
-                # the weight for each logprob(a|s) is R(tau)
-                batch_weights += [ep_ret] * ep_len
+                G = 0
+                returns = []
+                for r in reversed(ep_rews):
+                    G = r + self.gamma * G
+                    returns.insert(0, G)
+                batch_weights += returns
 
                 obs, done, ep_rews = engine.reset(), False, []
                 finished_rendering_this_epoch = True
