@@ -210,10 +210,6 @@ class engine:
             elif self.current_step > 3000 :
                 delay = MINIMAL_DELAY_2 
             else : delay = MINIMAL_DELAY_1"""
-             
-            if (len(self.fruit_type)>0 and self.fruit_type[-1] == -1 and self.current_step <=1500):
-                self.change_type() #no bombs at the beginning
-                print("Bomb changed to apple")
         return self.get_observation(), reward, done
 
 
@@ -287,14 +283,25 @@ class View:
     def _draw_ui(self, eng: engine):
         info_text = f"Step: {eng.current_step}"
         info_score = f"Score: {eng.score}"
-        info_proba = f"Δt: {round(eng.spawn_interval()/60,2)} sec"
+        info_timing = f"Δt: {round(eng.spawn_interval()/60, 2)} s"
+
+        p_bomb, p_apple, p_mango = eng.type_prob()
+        info_proba = (
+            f"ap:{int(p_apple*100)}%"
+            f"ma:{int(p_mango*100)}%"
+            f"bo:{int(p_bomb*100)}%"
+        )
+
         info_surf = self.font.render(info_text, True, self.colors['text'])
-        info_surf_2 = self.font.render(info_score, True, self.colors['text'] )
-        info_surf_3 = self.font.render(info_proba, True, self.colors['text'] )
+        info_surf_2 = self.font.render(info_score, True, self.colors['text'])
+        info_surf_3 = self.font.render(info_timing, True, self.colors['text'])
+        info_surf_4 = self.font.render(info_proba, True, self.colors['text'])
+
         self.screen.blit(info_surf, (10, 10))
-        self.screen.blit(info_surf_2, (10, 40))# en haut à gauche
-        self.screen.blit(info_surf_3,(10,70))
-        
+        self.screen.blit(info_surf_2, (10, 40))
+        self.screen.blit(info_surf_3, (10, 70))
+        self.screen.blit(info_surf_4, (10, 100))
+
         heart_text = self.font.render("♥", True, (255, 0, 0))  
         margin = 5
         for i in range(eng.lives):
@@ -316,6 +323,9 @@ if __name__ == "__main__":
     print("Utilise les Flèches GAUCHE / DROITE pour bouger.")
     
     while running:
+        if env.current_step == 50:
+            env.spawn_fruit()
+        
         # 1. Lire le clavier (Human Agent)
         keys = pygame.key.get_pressed()
         
