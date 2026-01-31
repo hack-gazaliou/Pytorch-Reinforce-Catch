@@ -1,3 +1,4 @@
-import agent 
-import engine
-import view
+from agent import agent
+
+catcher_agent = agent()
+

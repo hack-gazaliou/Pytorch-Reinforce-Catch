@@ -1,11 +1,9 @@
 import numpy as np
 import random as rd
 import torch
-import torch.nn as nn            # Pour construire les couches du réseau (Linear, ReLU)
-import torch.nn.functional as F   # ReLu
+import torch.nn as nn            # Pour construire les couches du réseau (Linear, ReLU)  # ReLu
 import torch.optim as optim      #Adam
 from torch.distributions import Categorical
-import engine
 from engine import engine
 
 class agent(nn.Module) :
@@ -25,7 +23,7 @@ class agent(nn.Module) :
         self.obs_dim = 9
         self.batch_size = 32 #to change if necessary
         self.policy_net = self.mlp(sizes=[self.obs_dim]+self.hidden_sizes+[self.n_acts], activation=nn.ReLU)
-        self.optimizer = torch.optim.Adam(self.policy_net.parameters())
+        self.optimizer = optim.Adam(self.policy_net.parameters())
         self.gamma = 0.99
     
     def get_policy(self,obs):

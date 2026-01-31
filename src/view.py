@@ -46,15 +46,18 @@ class View:
         return True
         
         
-def draw_ui(self, eng: engine):
-    info_text = f"Step: {eng.current_step}"
-    info_surf = self.font.render(info_text, True, self.colors['text'])
-    self.screen.blit(info_surf, (10, 10))  # en haut à gauche
+    def _draw_ui(self, eng: engine):
+        info_text = f"Step: {eng.current_step}"
+        info_score = f"Score: {eng.score}"
+        info_surf = self.font.render(info_text, True, self.colors['text'])
+        info_surf_2 = self.font.render(info_score, True, self.colors['text'] )
+        self.screen.blit(info_surf, (10, 10))
+        self.screen.blit(info_surf_2, (10, 40))# en haut à gauche
 
-    heart_text = self.font.render("♥", True, (255, 0, 0))  
-    margin = 5
-    for i in range(eng.lives):
-        x = self.screen.get_width() - (i + 1) * (heart_text.get_width() + margin)
-        y = 10  
-        self.screen.blit(heart_text, (x, y))
+        heart_text = self.font.render("♥", True, (255, 0, 0))  
+        margin = 5
+        for i in range(eng.lives):
+            x = self.screen.get_width() - (i + 1) * (heart_text.get_width() + margin)
+            y = 10  
+            self.screen.blit(heart_text, (x, y))
  

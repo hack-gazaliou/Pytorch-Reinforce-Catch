@@ -26,6 +26,7 @@ class engine:
         self.speed_multipliers = [-2, -1, 0 , 1, 2]
         
         self.current_step  = 0
+        self.score = 0
         self.max_steps = 1000
 
         
@@ -73,6 +74,7 @@ class engine:
         self.fruit_y = [1]
         self.fruit_type = [0]
         self.current_step = 0
+        self.score = 0
         return self.get_observation() #return the initial observation
     
     def step(self, action):
@@ -91,8 +93,10 @@ class engine:
                     match self.fruit_type[0]:
                         case 1: #mango
                             reward = 2
+                            self.score += 2
                         case 0: #apple
                             reward = 1
+                            self.score +=1
                         case -1: #bomb
                             reward = -3
                             self.lives = 0
