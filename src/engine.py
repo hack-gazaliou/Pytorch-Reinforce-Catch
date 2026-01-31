@@ -67,6 +67,10 @@ class engine:
         elif r > 0.2: self.fruit_type.append(0)#apple (60%)
         else: self.fruit_type.append(1) #mango (20%)
     
+    def change_type(self):
+        self.fruit_type[-1] = 0 #transformation of bombs into apple for the beginning of the game
+        
+    
     def reset(self): #reset the game to start a new episode
         self.lives = self.max_lives
         self.paddle_x = 0.5
@@ -127,7 +131,8 @@ class engine:
             spawn_probability = min(0.03 + 0.00005 * self.current_step, 0.5)
             if rd.random() < spawn_probability:
                 self.spawn_fruit()
-
+                if self.fruit_type[-1] == -1 and self.current_step <=1500:
+                    self.change_type() #no bombs at the beginning
 
         return self.get_observation(), reward, done
 
