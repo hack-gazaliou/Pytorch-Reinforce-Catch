@@ -6,7 +6,7 @@ import sys
 
 WIDTH = 1.0
 HEIGHT = 1.0
-PADDLE_WIDTH = 0.20
+PADDLE_WIDTH = 0.18
 PADDLE_HEIGHT = 0.03
 MINIMAL_DELAY_1 = 80
 MINIMAL_DELAY_2 = 50
@@ -19,7 +19,7 @@ class engine:
         self.paddle_width = PADDLE_WIDTH
         self.paddle_height = PADDLE_HEIGHT
         
-        self.max_lives = 4
+        self.max_lives = 3
         self.lives = 3
         
         self.paddle_x = 0.5
@@ -36,12 +36,7 @@ class engine:
         self.current_step  = 0
         self.score = 0
         self.max_steps = 10000
-        self.exploding = False
-        self.explosion_timer = 0
-        self.explosion_duration = 30  # frames (~0.5s à 60 FPS)
-        self.explosion_x = None
-        self.explosion_y = None
-        self.sp = 0
+        self.lvl = 1
         pygame.init()
         self.screen = pygame.display.set_mode((self.width, self.height))
 
@@ -78,15 +73,11 @@ class engine:
         self.lives / self.max_lives
     ])
     def type_prob(self):
-        if self.current_step < 1000:
-            return 0 , 0.85, 0.15 #p_bomb, p_apple, p_mango
-        elif self.current_step < 4000:
-            return 0.15, 0.7, 0.15
-        elif self.current_step < 6000:
-            return 0.2, 0.65, 0.15
-        elif self.current_step < 8000:
-            return 0.25, 0.55, 0.2
-        else:
+        if self.lvl == 1:
+            return 0.2 , 0.6, 0.2 #p_bomb, p_apple, p_mango
+        elif self.lvl == 2:
+            return 0.25, 0.50, 0.25
+        elif self.lvl == 3:
             return 0.3, 0.4, 0.3
                     
     def spawn_fruit(self):
@@ -107,24 +98,13 @@ class engine:
 
     
     def spawn_interval(self):
-        if self.current_step < 1000:
-            return 280
-        elif self.current_step < 2000:
-            return 230
-        elif self.current_step < 3000:
-            return 150
-        elif self.current_step <4000:
-            return 100 
-        elif self.current_step <5000:
-            return 80        
-        elif self.current_step <6000:
-            return 70
-        elif self.current_step <8000:
-            return 60
-        elif self.current_step <9000:
-            return 40
-        else:
-            return 30    # enfer
+        match self.lvl :
+            case 1 :
+                return 95
+            case 2 :
+                return 65
+            case 3 :
+                return 35
     
     def reset(self): #reset the game to start a new episode
         self.lives = self.max_lives
@@ -134,21 +114,16 @@ class engine:
         self.fruit_type = []
         self.current_step = 0
         self.score = 0
-        self.sp = 0
+        self.lvl = rd.randint(1,3)
+        #self.sp = 0
         return self.get_observation() #return the initial observation
 
-    def change_type(self):
-        self.fruit_type[-1] = 0 #transformation of bombs into apple for the beginning of the game
+    """def change_type(self):
+        self.fruit_type[-1] = 0""" #transformation of bombs into apple for the beginning of the game
            
     def step(self, action):
         reward = 0
         done = False
-        """if self.exploding:
-            self.explosion_timer += 1
-            if self.explosion_timer >= self.explosion_duration:
-                self.lives = 0
-                return self.get_observation(), -3, True
-            return self.get_observation(), 0, False"""""
         if self.paddle_x + self.speed_multipliers[action]*self.paddle_speed >1 : 
             self.paddle_x = 1
         elif self.paddle_x + self.speed_multipliers[action]*self.paddle_speed <0 : 
@@ -201,16 +176,6 @@ class engine:
             jitter = rd.randint(-5, 5)
             if self.current_step - self.last_fall >= interval + jitter:
                 self.spawn_fruit()
-                
-            """spawn_probability = max(min(0.0005* (self.current_step**0.333), 0.032), 0.005)
-            self.sp = 1/(60*spawn_probability)
-            #spawn_probability = min(0.0082 * self.current_step**0.1, 0.15)
-            delay = 0
-            if self.current_step > 6000 :
-                delay = MINIMAL_DELAY_3
-            elif self.current_step > 3000 :
-                delay = MINIMAL_DELAY_2 
-            else : delay = MINIMAL_DELAY_1"""
         return self.get_observation(), reward, done
 
 visualize = True
@@ -270,9 +235,6 @@ class View:
                 else:
                     rect = self.mango_img.get_rect(center=(px, py))
                     self.screen.blit(self.mango_img, rect)                      
-                    """rad = int(0.04 * self.width)
-                    color_key = self.fruit_map.get(t, 'apple')
-                    pygame.draw.circle(self.screen, self.colors[color_key], (px, py), rad)"""
                             
         self._draw_ui(eng)
         pygame.display.flip()
@@ -283,7 +245,8 @@ class View:
         info_text = f"Step: {eng.current_step}"
         info_score = f"Score: {eng.score}"
         info_timing = f"Δt: {round(eng.spawn_interval()/60, 2)} s"
-
+        info_lvl = f"Lvl :{eng.lvl}"
+        
         p_bomb, p_apple, p_mango = eng.type_prob()
         info_proba = (
             f"ap:{int(p_apple*100)}% "
@@ -295,11 +258,13 @@ class View:
         info_surf_2 = self.font.render(info_score, True, self.colors['text'])
         info_surf_3 = self.font.render(info_timing, True, self.colors['text'])
         info_surf_4 = self.font.render(info_proba, True, self.colors['text'])
-
+        info_surf_5 = self.font.render(info_lvl, True, self.colors['text'])
+        
         self.screen.blit(info_surf, (10, 10))
         self.screen.blit(info_surf_2, (10, 40))
         self.screen.blit(info_surf_3, (10, 70))
         self.screen.blit(info_surf_4, (10, 100))
+        self.screen.blit(info_surf_5, (10, 130))
 
         heart_text = self.font.render("♥", True, (255, 0, 0))  
         margin = 5
@@ -308,8 +273,6 @@ class View:
             y = 10  
             self.screen.blit(heart_text, (x, y))
     
-    
-
 
 if __name__ == "__main__":
     env = engine()
@@ -322,7 +285,7 @@ if __name__ == "__main__":
     print("Utilise les Flèches GAUCHE / DROITE pour bouger.")
     
     while running:
-        if env.current_step == 50:
+        if env.current_step == 2:
             env.spawn_fruit()
         
         # 1. Lire le clavier (Human Agent)

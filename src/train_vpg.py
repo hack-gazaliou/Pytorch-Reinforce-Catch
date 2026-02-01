@@ -49,4 +49,4 @@ def train_one_epoch(age : VPGAgent, eng : engine):
                                     weights=torch.as_tensor(batch_weights, dtype=torch.float32))
     batch_loss.backward()
     age.optimizer.step()
-    return batch_loss
+    return batch_loss.item()

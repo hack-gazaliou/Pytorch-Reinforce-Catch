@@ -30,7 +30,7 @@ class engine:
         
         self.current_step  = 0
         self.score = 0
-        self.max_steps = 10000
+        self.max_steps = 5000
         self.exploding = False
         self.sp = 0
 
@@ -64,13 +64,13 @@ class engine:
         self.lives / self.max_lives
     ])
     def type_prob(self):
-        if self.current_step < 1000:
+        if self.current_step < 1000/2:
             return 0 , 0.85, 0.15 #p_bomb, p_apple, p_mango
-        elif self.current_step < 4000:
+        elif self.current_step < 4000/2:
             return 0.15, 0.7, 0.15
-        elif self.current_step < 6000:
+        elif self.current_step < 6000/2:
             return 0.2, 0.65, 0.15
-        elif self.current_step < 8000:
+        elif self.current_step < 8000/2:
             return 0.25, 0.55, 0.2
         else:
             return 0.3, 0.4, 0.3
@@ -93,21 +93,21 @@ class engine:
 
     
     def spawn_interval(self):
-        if self.current_step < 1000:
-            return 280
-        elif self.current_step < 2000:
+        if self.current_step < 1000/2:
             return 230
-        elif self.current_step < 3000:
+        elif self.current_step < 2000/2:
+            return 190
+        elif self.current_step < 3000/2:
             return 150
-        elif self.current_step <4000:
+        elif self.current_step <4000/2:
             return 100 
-        elif self.current_step <5000:
+        elif self.current_step <5000/2:
             return 80        
-        elif self.current_step <6000:
+        elif self.current_step <6000/2:
             return 70
-        elif self.current_step <8000:
+        elif self.current_step <8000/2:
             return 60
-        elif self.current_step <9000:
+        elif self.current_step <9000/2:
             return 40
         else:
             return 30 
