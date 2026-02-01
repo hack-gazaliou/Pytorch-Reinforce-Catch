@@ -18,14 +18,22 @@ class View:
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 30)
-        self.bomb_img = pygame.image.load("bomb2.png").convert_alpha()
-        self.bomb_img = pygame.transform.scale(self.bomb_img,(int(0.09 * self.width), int(0.09 * self.width)))
-        self.mango_img = pygame.image.load("mango.png").convert_alpha()
-        self.mango_img = pygame.transform.scale(self.mango_img,(int(0.12 * self.width), int(0.12 * self.width)))
-        self.apple_img = pygame.image.load("apple.png").convert_alpha()
-        self.apple_img = pygame.transform.scale(self.apple_img,(int(0.08 * self.width), int(0.08 * self.width)))
-        self.cloud_img = pygame.image.load("cloud.png").convert_alpha()
-        self.coud_img = pygame.transform.scale(self.cloud_img,(int( 0.3*self.width), int(0.3*self.width)))
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(current_dir)
+        img_dir = os.path.join(root_dir, "pictures")
+        
+        self.bomb_img = pygame.image.load(os.path.join(img_dir, "bomb2.png")).convert_alpha()
+        self.bomb_img = pygame.transform.scale(self.bomb_img, (int(0.09 * self.width), int(0.09 * self.width)))
+        
+        self.mango_img = pygame.image.load(os.path.join(img_dir, "mango.png")).convert_alpha()
+        self.mango_img = pygame.transform.scale(self.mango_img, (int(0.12 * self.width), int(0.12 * self.width)))
+        
+        self.apple_img = pygame.image.load(os.path.join(img_dir, "apple.png")).convert_alpha()
+        self.apple_img = pygame.transform.scale(self.apple_img, (int(0.08 * self.width), int(0.08 * self.width)))
+        
+        self.cloud_img = pygame.image.load(os.path.join(img_dir, "cloud.png")).convert_alpha()
+        self.cloud_img = pygame.transform.scale(self.cloud_img, (int(0.3 * self.width), int(0.3 * self.width)))
+
         
     def render (self, eng :engine) :
         for event in pygame.event.get():
