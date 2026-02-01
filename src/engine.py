@@ -3,31 +3,36 @@ import random as rd
 
 WIDTH = 1.0
 HEIGHT = 1.0
-PADDLE_WIDTH = 0.2
-PADDLE_HEIGHT = 0.05
+PADDLE_WIDTH = 0.20
+PADDLE_HEIGHT = 0.03
 
 class engine:
+
     def __init__(self):
         self.width = WIDTH
         self.height = HEIGHT
         self.paddle_width = PADDLE_WIDTH
         self.paddle_height = PADDLE_HEIGHT
         
-        self.max_lives = 3
+        self.max_lives = 4
         self.lives = 3
         
         self.paddle_x = 0.5
         self.fruit_x = []
         self.fruit_y = []
+        self.can_fall = True
         
         self.fruit_type = [] #1 = mango, 0 = apple, -1 = bomb
-        self.fruit_speed = 0.03
-        self.paddle_speed = 0.05
+        self.fruit_speed = 0.003
+        self.paddle_speed = 0.01
         self.speed_multipliers = [-2, -1, 0 , 1, 2]
+        self.last_fall = 0
         
         self.current_step  = 0
         self.score = 0
-        self.max_steps = 1000
+        self.max_steps = 10000
+        self.exploding = False
+        self.sp = 0
 
         
     def get_observation(self):
@@ -58,29 +63,69 @@ class engine:
         *obs_f2,
         self.lives / self.max_lives
     ])
-            
+    def type_prob(self):
+        if self.current_step < 1000:
+            return 0 , 0.85, 0.15 #p_bomb, p_apple, p_mango
+        elif self.current_step < 4000:
+            return 0.15, 0.7, 0.15
+        elif self.current_step < 6000:
+            return 0.2, 0.65, 0.15
+        elif self.current_step < 8000:
+            return 0.25, 0.55, 0.2
+        else:
+            return 0.3, 0.4, 0.3
+                    
     def spawn_fruit(self):
         self.fruit_x.append(rd.random())
         self.fruit_y.append(1.0)
-        r = rd.random()
-        if r > 0.8: self.fruit_type.append(-1) #bomb (20%)
-        elif r > 0.2: self.fruit_type.append(0)#apple (60%)
-        else: self.fruit_type.append(1) #mango (20%)
-    
-    def change_type(self):
-        self.fruit_type[-1] = 0 #transformation of bombs into apple for the beginning of the game
         
+        p_bomb, p_apple, p_mango = self.type_prob()
+        r = rd.random()
+
+        if r < p_bomb:
+            self.fruit_type.append(-1)
+        elif r < p_bomb + p_apple:
+            self.fruit_type.append(0)
+        else:
+            self.fruit_type.append(1)
+
+        self.last_fall = self.current_step
+
     
-    def reset(self): #reset the game to start a new episode
+    def spawn_interval(self):
+        if self.current_step < 1000:
+            return 280
+        elif self.current_step < 2000:
+            return 230
+        elif self.current_step < 3000:
+            return 150
+        elif self.current_step <4000:
+            return 100 
+        elif self.current_step <5000:
+            return 80        
+        elif self.current_step <6000:
+            return 70
+        elif self.current_step <8000:
+            return 60
+        elif self.current_step <9000:
+            return 40
+        else:
+            return 30 
+    
+    def reset(self): 
         self.lives = self.max_lives
         self.paddle_x = 0.5
-        self.fruit_x = [0.5]
-        self.fruit_y = [1]
-        self.fruit_type = [0]
+        self.fruit_x = []
+        self.fruit_y = []
+        self.fruit_type = []
         self.current_step = 0
         self.score = 0
+        self.sp = 0
         return self.get_observation() #return the initial observation
-    
+
+    def change_type(self):
+        self.fruit_type[-1] = 0 #transformation of bombs into apple for the beginning of the game
+           
     def step(self, action):
         reward = 0
         done = False
@@ -92,24 +137,28 @@ class engine:
             self.paddle_x += self.speed_multipliers[action]*self.paddle_speed
         self.fruit_y = [y-self.fruit_speed for y in self.fruit_y]
         if len(self.fruit_y) > 0:
-            if self.fruit_y[0] <= 0:
-                if self.paddle_x - self.paddle_width/2 <= self.fruit_x[0] <= self.paddle_x + self.paddle_width/2: #fruit is catched
+            in_paddle = self.paddle_x - self.paddle_width/2 <= self.fruit_x[0] <= self.paddle_x + self.paddle_width/2
+            if self.fruit_y[0] <= 0.045 and in_paddle:
                     match self.fruit_type[0]:
                         case 1: #mango
                             reward = 2
-                            self.score += 2
+                            self.score +=2
                         case 0: #apple
                             reward = 1
-                            self.score +=1
+                            self.score+=1
                         case -1: #bomb
                             reward = -3
+                            self.exploding = True
+                            self.explosion_timer = 0
+                            self.explosion_x = self.fruit_x[0]
+                            self.explosion_y = self.fruit_y[0]
                             self.lives = 0
                             done = True
                     self.fruit_x.pop(0)
                     self.fruit_y.pop(0)
                     self.fruit_type.pop(0)
 
-                else:   #fruit falls
+            elif self.fruit_y[0] <= 0:   
                     match self.fruit_type[0]:
                         case 1: #mango
                             reward = -2
@@ -128,12 +177,8 @@ class engine:
         if self.current_step >= self.max_steps and done == False:
             done = True
         if not done :
-            spawn_probability = min(0.03 + 0.00005 * self.current_step, 0.5)
-            if rd.random() < spawn_probability:
+            interval = self.spawn_interval()
+            jitter = rd.randint(-5, 5)
+            if self.current_step - self.last_fall >= interval + jitter:
                 self.spawn_fruit()
-                if self.fruit_type[-1] == -1 and self.current_step <=1500:
-                    self.change_type() #no bombs at the beginning
-
         return self.get_observation(), reward, done
-
-    

@@ -11,6 +11,7 @@ PADDLE_HEIGHT = 0.03
 MINIMAL_DELAY_1 = 80
 MINIMAL_DELAY_2 = 50
 MINIMAL_DELAY_3 = 25
+
 class engine:
     def __init__(self):
         self.width = WIDTH
@@ -142,12 +143,12 @@ class engine:
     def step(self, action):
         reward = 0
         done = False
-        if self.exploding:
+        """if self.exploding:
             self.explosion_timer += 1
             if self.explosion_timer >= self.explosion_duration:
                 self.lives = 0
                 return self.get_observation(), -3, True
-            return self.get_observation(), 0, False
+            return self.get_observation(), 0, False"""""
         if self.paddle_x + self.speed_multipliers[action]*self.paddle_speed >1 : 
             self.paddle_x = 1
         elif self.paddle_x + self.speed_multipliers[action]*self.paddle_speed <0 : 
@@ -212,12 +213,10 @@ class engine:
             else : delay = MINIMAL_DELAY_1"""
         return self.get_observation(), reward, done
 
-
 visualize = True
 
 class View:
-    
-    
+        
     def __init__(self, eng :engine):
         self.engine = eng
         self.width = 640
@@ -287,8 +286,8 @@ class View:
 
         p_bomb, p_apple, p_mango = eng.type_prob()
         info_proba = (
-            f"ap:{int(p_apple*100)}%"
-            f"ma:{int(p_mango*100)}%"
+            f"ap:{int(p_apple*100)}% "
+            f"ma:{int(p_mango*100)}% "
             f"bo:{int(p_bomb*100)}%"
         )
 
@@ -340,10 +339,8 @@ if __name__ == "__main__":
             
         # 2. Update Physique
         obs, reward, done = env.step(action)
-        
         # 3. Update Visuel
         keep_open = view.render(env)
-        
         if not keep_open or done:
             running = False
             if done: print("GAME OVER")
