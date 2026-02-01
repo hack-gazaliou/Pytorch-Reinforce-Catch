@@ -3,10 +3,11 @@ import random as rd
 import pygame
 from engine import engine
 import sys
+import time
 
 WIDTH = 1.0
 HEIGHT = 1.0
-PADDLE_WIDTH = 0.18
+PADDLE_WIDTH = 0.17
 PADDLE_HEIGHT = 0.03
 MINIMAL_DELAY_1 = 80
 MINIMAL_DELAY_2 = 50
@@ -25,7 +26,6 @@ class engine:
         self.paddle_x = 0.5
         self.fruit_x = []
         self.fruit_y = []
-        self.can_fall = True
         
         self.fruit_type = [] #1 = mango, 0 = apple, -1 = bomb
         self.fruit_speed = 0.003
@@ -37,41 +37,65 @@ class engine:
         self.score = 0
         self.max_steps = 10000
         self.lvl = 1
+        self.done = False
         pygame.init()
         self.screen = pygame.display.set_mode((self.width, self.height))
-
-
-        #self.explosion_frames = [pygame.image.load("explosion.png").convert_alpha()for i in range(1, 6)]
-        #self.explosion_frames = [pygame.transform.scale(img, (80, 80))for img in self.explosion_frames]
-        
-    def get_observation(self):
+            
+    def get_observation(self) :
         sorted_indices = np.argsort(self.fruit_y)
         nb_fruits = len(self.fruit_y)
         if nb_fruits > 0:
             idx1 = sorted_indices[0] 
             obs_f1 = [
-                self.fruit_x[idx1], 
-                self.fruit_y[idx1], 
-                self.fruit_type[idx1]
+                self.fruit_x[idx1],     #x
+                self.fruit_y[idx1],     #y
+                self.fruit_type[idx1],  #type
+                1.0                     #presence flag
             ]
-        else: obs_f1 = [0.5, 1.5, 0] # No fruit in the frame, we display an out of screen virtual fruit
+        else : obs_f1 = [0.0, 0.0, 0.0, 0.0] 
+        
         if nb_fruits > 1:
             idx2 = sorted_indices[1] 
             obs_f2 = [
                 self.fruit_x[idx2], 
                 self.fruit_y[idx2], 
                 self.fruit_type[idx2], 
-                1.0 #flag second fruit
+                1.0 
             ]
         else:
-            obs_f2 = [0.0, 0.0, 0.0, 0.0] # <--- FLAG : "no second fruit"
+            obs_f2 = [0.0, 0.0, 0.0, 0.0]
+                    
+        if nb_fruits > 2:
+            idx3 = sorted_indices[2] 
+            obs_f3 = [
+                self.fruit_x[idx3], 
+                self.fruit_y[idx3], 
+                self.fruit_type[idx3], 
+                1.0
+            ]
+        else:
+            obs_f3 = [0.0, 0.0, 0.0, 0.0]   
             
+        if nb_fruits > 3:
+            idx4 = sorted_indices[3] 
+            obs_f4 = [
+                self.fruit_x[idx4], 
+                self.fruit_y[idx4], 
+                self.fruit_type[idx4], 
+                1.0 
+            ]
+        else:
+            obs_f4 = [0.0, 0.0, 0.0, 0.0]
+        
         return np.array([
         self.paddle_x,
         *obs_f1,
         *obs_f2,
-        self.lives / self.max_lives
-    ])
+        *obs_f3,
+        *obs_f4,
+        self.lives / self.max_lives 
+        ])
+            
     def type_prob(self):
         if self.lvl == 1:
             return 0.2 , 0.6, 0.2 #p_bomb, p_apple, p_mango
@@ -83,7 +107,6 @@ class engine:
     def spawn_fruit(self):
         self.fruit_x.append(rd.random())
         self.fruit_y.append(1.0)
-        
         p_bomb, p_apple, p_mango = self.type_prob()
         r = rd.random()
 
@@ -114,16 +137,12 @@ class engine:
         self.fruit_type = []
         self.current_step = 0
         self.score = 0
-        self.lvl = rd.randint(1,3)
-        #self.sp = 0
+        self.lvl = 2#rd.randint(1,3)
         return self.get_observation() #return the initial observation
-
-    """def change_type(self):
-        self.fruit_type[-1] = 0""" #transformation of bombs into apple for the beginning of the game
            
     def step(self, action):
         reward = 0
-        done = False
+        self.done = False
         if self.paddle_x + self.speed_multipliers[action]*self.paddle_speed >1 : 
             self.paddle_x = 1
         elif self.paddle_x + self.speed_multipliers[action]*self.paddle_speed <0 : 
@@ -143,12 +162,8 @@ class engine:
                             self.score+=1
                         case -1: #bomb
                             reward = -3
-                            self.exploding = True
-                            self.explosion_timer = 0
-                            self.explosion_x = self.fruit_x[0]
-                            self.explosion_y = self.fruit_y[0]
                             self.lives = 0
-                            done = True
+                            self.done = True
                     self.fruit_x.pop(0)
                     self.fruit_y.pop(0)
                     self.fruit_type.pop(0)
@@ -167,16 +182,16 @@ class engine:
                     self.fruit_y.pop(0)
                     self.fruit_type.pop(0)
                     if self.lives <= 0:
-                        done = True
+                        self.done = True
         self.current_step += 1
-        if self.current_step >= self.max_steps and done == False:
-            done = True
-        if not done :
+        if self.current_step >= self.max_steps and self.done == False:
+            self.done = True
+        if not self.done :
             interval = self.spawn_interval()
             jitter = rd.randint(-5, 5)
             if self.current_step - self.last_fall >= interval + jitter:
                 self.spawn_fruit()
-        return self.get_observation(), reward, done
+        return self.get_observation(), reward, self.done
 
 visualize = True
 
@@ -272,6 +287,22 @@ class View:
             x = self.screen.get_width() - (i + 1) * (heart_text.get_width() + margin)
             y = 10  
             self.screen.blit(heart_text, (x, y))
+            
+    def show_game_over(self, score):
+        overlay = pygame.Surface((self.width, self.height))
+        overlay.set_alpha(128) 
+        overlay.fill((0, 0, 0))
+        self.screen.blit(overlay, (0, 0))
+        
+        font_big = pygame.font.SysFont("Arial", 60, bold=True)
+        text_go = font_big.render("GAME OVER", True, (255, 0, 0))
+        rect_go = text_go.get_rect(center=(self.width // 2, self.height // 2 - 30))
+        self.screen.blit(text_go, rect_go)
+        
+        text_score = self.font.render(f"Final Score: {score}", True, (255, 255, 255))
+        rect_score = text_score.get_rect(center=(self.width // 2, self.height // 2 + 30))
+        self.screen.blit(text_score, rect_score)
+        pygame.display.flip()
     
 
 if __name__ == "__main__":
@@ -306,7 +337,10 @@ if __name__ == "__main__":
         keep_open = view.render(env)
         if not keep_open or done:
             running = False
-            if done: print("GAME OVER")
+            if done: 
+                print("GAME OVER")
+                view.show_game_over(env.score)
+                time.sleep(3)
 
     pygame.quit()
     sys.exit()

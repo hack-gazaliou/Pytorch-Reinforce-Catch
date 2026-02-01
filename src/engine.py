@@ -14,13 +14,13 @@ class engine:
         self.paddle_width = PADDLE_WIDTH
         self.paddle_height = PADDLE_HEIGHT
         
-        self.max_lives = 4
+        self.max_lives = 3
         self.lives = 3
         
         self.paddle_x = 0.5
         self.fruit_x = []
         self.fruit_y = []
-        self.can_fall = True
+        self.lvl = 1
         
         self.fruit_type = [] #1 = mango, 0 = apple, -1 = bomb
         self.fruit_speed = 0.003
@@ -30,49 +30,70 @@ class engine:
         
         self.current_step  = 0
         self.score = 0
-        self.max_steps = 5000
-        self.exploding = False
-        self.sp = 0
-
-        
-    def get_observation(self):
+        self.max_steps = 500
+        self.done = False
+  
+    def get_observation(self) :
         sorted_indices = np.argsort(self.fruit_y)
         nb_fruits = len(self.fruit_y)
         if nb_fruits > 0:
             idx1 = sorted_indices[0] 
             obs_f1 = [
-                self.fruit_x[idx1], 
-                self.fruit_y[idx1], 
-                self.fruit_type[idx1]
+                self.fruit_x[idx1],     #x
+                self.fruit_y[idx1],     #y
+                self.fruit_type[idx1],  #type
+                1.0                     #presence flag
             ]
-        else: obs_f1 = [0.5, 1.5, 0] # No fruit in the frame, we display an out of screen virtual fruit
+        else : obs_f1 = [0.0, 0.0, 0.0, 0.0] 
+        
         if nb_fruits > 1:
             idx2 = sorted_indices[1] 
             obs_f2 = [
                 self.fruit_x[idx2], 
                 self.fruit_y[idx2], 
                 self.fruit_type[idx2], 
-                1.0 #flag second fruit
+                1.0 
             ]
         else:
-            obs_f2 = [0.0, 0.0, 0.0, 0.0] # <--- FLAG : "no second fruit"
+            obs_f2 = [0.0, 0.0, 0.0, 0.0]
+                    
+        if nb_fruits > 2:
+            idx3 = sorted_indices[2] 
+            obs_f3 = [
+                self.fruit_x[idx3], 
+                self.fruit_y[idx3], 
+                self.fruit_type[idx3], 
+                1.0
+            ]
+        else:
+            obs_f3 = [0.0, 0.0, 0.0, 0.0]   
             
+        if nb_fruits > 3:
+            idx4 = sorted_indices[3] 
+            obs_f4 = [
+                self.fruit_x[idx4], 
+                self.fruit_y[idx4], 
+                self.fruit_type[idx4], 
+                1.0 
+            ]
+        else:
+            obs_f4 = [0.0, 0.0, 0.0, 0.0]
+        
         return np.array([
         self.paddle_x,
         *obs_f1,
         *obs_f2,
-        self.lives / self.max_lives
-    ])
+        *obs_f3,
+        *obs_f4,
+        self.lives / self.max_lives 
+        ])
+
     def type_prob(self):
-        if self.current_step < 1000/2:
-            return 0 , 0.85, 0.15 #p_bomb, p_apple, p_mango
-        elif self.current_step < 4000/2:
-            return 0.15, 0.7, 0.15
-        elif self.current_step < 6000/2:
-            return 0.2, 0.65, 0.15
-        elif self.current_step < 8000/2:
-            return 0.25, 0.55, 0.2
-        else:
+        if self.lvl == 1:
+            return 0.2 , 0.6, 0.2 #p_bomb, p_apple, p_mango
+        elif self.lvl == 2:
+            return 0.25, 0.50, 0.25
+        elif self.lvl == 3:
             return 0.3, 0.4, 0.3
                     
     def spawn_fruit(self):
@@ -90,27 +111,15 @@ class engine:
             self.fruit_type.append(1)
 
         self.last_fall = self.current_step
-
-    
+        
     def spawn_interval(self):
-        if self.current_step < 1000/2:
-            return 230
-        elif self.current_step < 2000/2:
-            return 190
-        elif self.current_step < 3000/2:
-            return 150
-        elif self.current_step <4000/2:
-            return 100 
-        elif self.current_step <5000/2:
-            return 80        
-        elif self.current_step <6000/2:
-            return 70
-        elif self.current_step <8000/2:
-            return 60
-        elif self.current_step <9000/2:
-            return 40
-        else:
-            return 30 
+        match self.lvl :
+            case 1 :
+                return 95
+            case 2 :
+                return 65
+            case 3 :
+                return 35
     
     def reset(self): 
         self.lives = self.max_lives
@@ -120,15 +129,13 @@ class engine:
         self.fruit_type = []
         self.current_step = 0
         self.score = 0
-        self.sp = 0
+        self.lvl = rd.randint(1,3)
         return self.get_observation() #return the initial observation
 
-    def change_type(self):
-        self.fruit_type[-1] = 0 #transformation of bombs into apple for the beginning of the game
            
     def step(self, action):
         reward = 0
-        done = False
+        self.done = False
         if self.paddle_x + self.speed_multipliers[action]*self.paddle_speed >1 : 
             self.paddle_x = 1
         elif self.paddle_x + self.speed_multipliers[action]*self.paddle_speed <0 : 
@@ -148,12 +155,8 @@ class engine:
                             self.score+=1
                         case -1: #bomb
                             reward = -3
-                            self.exploding = True
-                            self.explosion_timer = 0
-                            self.explosion_x = self.fruit_x[0]
-                            self.explosion_y = self.fruit_y[0]
                             self.lives = 0
-                            done = True
+                            self.done = True
                     self.fruit_x.pop(0)
                     self.fruit_y.pop(0)
                     self.fruit_type.pop(0)
@@ -172,13 +175,13 @@ class engine:
                     self.fruit_y.pop(0)
                     self.fruit_type.pop(0)
                     if self.lives <= 0:
-                        done = True
+                        self.done = True
         self.current_step += 1
-        if self.current_step >= self.max_steps and done == False:
-            done = True
-        if not done :
+        if self.current_step >= self.max_steps and self.done == False:
+            self.done = True
+        if not self.done :
             interval = self.spawn_interval()
             jitter = rd.randint(-5, 5)
-            if self.current_step - self.last_fall >= interval + jitter:
+            if self.current_step - self.last_fall >= interval + jitter or self.current_step == 1: #to have a fruit at the beginning
                 self.spawn_fruit()
-        return self.get_observation(), reward, done
+        return self.get_observation(), reward, self.done

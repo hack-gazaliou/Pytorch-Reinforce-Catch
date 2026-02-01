@@ -1,5 +1,7 @@
 import pygame
-import engine
+from engine import engine
+import os
+
 visualize = True
 
 class View:
@@ -89,4 +91,26 @@ class View:
             x = self.screen.get_width() - (i + 1) * (heart_text.get_width() + margin)
             y = 10  
             self.screen.blit(heart_text, (x, y))
- 
+            
+    def save_frame(self, epoch, frame_idx, folder="recordings"):
+            path = f"{folder}/epoch_{epoch}"
+            if not os.path.exists(path):
+                os.makedirs(path)
+            filename = f"{path}/frame_{frame_idx:04d}.png"
+            pygame.image.save(self.screen, filename)
+    
+    def show_game_over(self, score):
+        overlay = pygame.Surface((self.width, self.height))
+        overlay.set_alpha(128) 
+        overlay.fill((0, 0, 0))
+        self.screen.blit(overlay, (0, 0))
+        
+        font_big = pygame.font.SysFont("Arial", 60, bold=True)
+        text_go = font_big.render("GAME OVER", True, (255, 0, 0))
+        rect_go = text_go.get_rect(center=(self.width // 2, self.height // 2 - 30))
+        self.screen.blit(text_go, rect_go)
+        
+        text_score = self.font.render(f"Final Score: {score}", True, (255, 255, 255))
+        rect_score = text_score.get_rect(center=(self.width // 2, self.height // 2 + 30))
+        self.screen.blit(text_score, rect_score)
+        pygame.display.flip()
