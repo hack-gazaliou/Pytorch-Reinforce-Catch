@@ -75,6 +75,7 @@ class View:
         info_text = f"Step: {eng.current_step}"
         info_score = f"Score: {eng.score}"
         info_timing = f"Δt: {round(eng.spawn_interval()/60, 2)} s"
+        info_lvl = f"lvl {eng.lvl}"
 
         p_bomb, p_apple, p_mango = eng.type_prob()
         info_proba = (
@@ -87,11 +88,13 @@ class View:
         info_surf_2 = self.font.render(info_score, True, self.colors['text'])
         info_surf_3 = self.font.render(info_timing, True, self.colors['text'])
         info_surf_4 = self.font.render(info_proba, True, self.colors['text'])
-
+        info_surf_5 = self.font.render(info_lvl, True, self.colors['text'])
+        
         self.screen.blit(info_surf, (10, 10))
         self.screen.blit(info_surf_2, (10, 40))
         self.screen.blit(info_surf_3, (10, 70))
         self.screen.blit(info_surf_4, (10, 100))
+        self.screen.blit(info_surf_5, (10, 130))
 
         heart_text = self.font.render("♥", True, (255, 0, 0))  
         margin = 5

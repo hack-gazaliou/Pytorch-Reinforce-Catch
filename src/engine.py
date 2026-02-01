@@ -129,7 +129,7 @@ class engine:
         self.fruit_type = []
         self.current_step = 0
         self.score = 0
-        self.lvl = rd.randint(1,3)
+        self.lvl = rd.randint(2,3)
         return self.get_observation() #return the initial observation
 
            
