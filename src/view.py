@@ -100,7 +100,7 @@ class View:
             y = 10  
             self.screen.blit(heart_text, (x, y))
             
-    def save_frame(self, epoch, frame_idx, folder="recordings"):
+    def save_frame(self, epoch, frame_idx, folder="recordings_2"):
             path = f"{folder}/epoch_{epoch}"
             if not os.path.exists(path):
                 os.makedirs(path)

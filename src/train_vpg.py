@@ -36,6 +36,9 @@ def train_one_epoch(age : VPGAgent, eng : engine):
 
             if len(batch_rets) > age.batch_size:
                 break 
+    rets = np.array(batch_weights)
+    rets = (rets - rets.mean()) / (rets.std() + 1e-8) # Standardization
+    batch_weights = rets.tolist()
     age.optimizer.zero_grad() #on efface les anciens gradients de .data
     batch_loss = age.compute_loss(obs=torch.as_tensor(batch_obs, dtype=torch.float32),  #on calcule la loss
                                     act=torch.as_tensor(batch_acts, dtype=torch.int32),
