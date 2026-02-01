@@ -7,6 +7,7 @@ from train_vpg import train_one_epoch
 import pandas as pd
 import time
 import os
+import pygame
 
 ALGO_CHOISIE = "VPG"
 MAX_EPOCHS = 251
@@ -30,7 +31,6 @@ os.makedirs(policy_path, exist_ok=True)
 
 if __name__ == "__main__":
     my_eng = engine()
-    my_view = View(my_eng)
     
     match ALGO_CHOISIE :
         case "VPG":
@@ -45,6 +45,7 @@ if __name__ == "__main__":
     for epoch in range (1, MAX_EPOCHS): 
         if epoch in RECORD_EPOCHS: #capture of keys epochs
             print(f" Enregistrement de l'epoch {epoch}...")
+            my_view = View(my_eng)
             obs = my_eng.reset()
             done = False
             frame_count = 0
@@ -64,6 +65,7 @@ if __name__ == "__main__":
             checkpoint_name = os.path.join(policy_path, f"model_epoch_{epoch}.pth")
             torch.save(my_agent.state_dict(), checkpoint_name)
             time.sleep(3)
+            pygame.quit()
             
         loss, ret, std, length = train_one_epoch(my_agent, my_eng)
 
