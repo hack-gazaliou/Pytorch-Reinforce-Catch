@@ -55,7 +55,7 @@ if __name__ == "__main__":
             
             while not done: 
                 my_view.render(my_eng)
-                my_view.save_frame(epoch=epoch, frame_idx=frame_count)
+                my_view.save_frame(epoch=epoch, frame_idx=frame_count, folder=recording_path)
                 act = my_agent.get_action(torch.as_tensor(obs, dtype=torch.float32))
                 obs, _, done = my_eng.step(act)
                 frame_count += 1

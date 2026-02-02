@@ -192,10 +192,10 @@ class engine:
             if self.fruit_y[0] <= 0.045 and in_paddle:
                     match self.fruit_type[0]:
                         case 1: #mango
-                            reward = 3
+                            reward = 8
                             self.score +=2
                         case 0: #apple
-                            reward = 2
+                            reward = 5
                             self.score+=1
                         case -1: #bomb
                             reward = -3
@@ -208,10 +208,10 @@ class engine:
             elif self.fruit_y[0] <= 0:   
                     match self.fruit_type[0]:
                         case 1: #mango
-                            reward = -2
+                            reward = -4
                             self.lives -= 1
                         case 0: #apple
-                            reward = -1
+                            reward = -2
                             self.lives -= 1
                         case -1: #bomb
                             reward = 1

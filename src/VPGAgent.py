@@ -2,6 +2,7 @@
 import torch.nn as nn            # Pour construire les couches du réseau (Linear, ReLU)  # ReLu
 import torch.optim as optim      #Adam
 from torch.distributions import Categorical
+import numpy as np
 
 class VPGAgent(nn.Module) :
     
@@ -27,7 +28,9 @@ class VPGAgent(nn.Module) :
         logits = self.policy_net(obs)
         return Categorical(logits=logits)
 
-    def get_action(self,obs):
+    def get_action(self, obs): #0.1 greedy to force exploration (in response to coward strategy)
+        if np.random.rand() < 0.1: 
+            return np.random.randint(0, self.n_acts)    
         return self.get_policy(obs).sample().item()
 
     def compute_loss(self, obs, act, weights):
