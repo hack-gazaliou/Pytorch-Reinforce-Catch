@@ -171,6 +171,7 @@ class engine:
         self.fruit_type = list(self.fruit_type)
 
         self.current_step = 0
+        self.last_fall = 0
         self.score = 0
         self.lvl = 2        
         return self.get_observation() 
