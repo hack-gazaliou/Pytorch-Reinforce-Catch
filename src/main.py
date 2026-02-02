@@ -12,7 +12,7 @@ import pygame
 ALGO_CHOISIE = "VPG"
 MAX_EPOCHS = 251
 RECORD_EPOCHS = [1, 2, 3, 5, 10, 15, 20, 30, 40, 50, 75, 100, 125, 150, 175, 200, 225, 250]
-TRAINING_NAME = "training_2"
+TRAINING_NAME = "training_4"
 history = {
     "loss": [],
     "avg_return": [],
@@ -24,10 +24,12 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(current_dir)
 recording_path = os.path.join(root_dir, "recordings", TRAINING_NAME)
 policy_path = os.path.join(root_dir, "policies", TRAINING_NAME)
+analysis_path = os.path.join(root_dir, "analysis")
 
 # Création des dossiers si nécessaire
 os.makedirs(recording_path, exist_ok=True)
 os.makedirs(policy_path, exist_ok=True)
+os.makedirs(analysis_path, exist_ok=True)
 
 if __name__ == "__main__":
     my_eng = engine()
@@ -74,10 +76,14 @@ if __name__ == "__main__":
         history["std_return"].append(std)
         history["avg_len"].append(length)
         
-        print(f"Epoch {epoch} | Loss: {loss:.3f} | Score Moyen: {ret:.1f} | Durée Moy: {length:.1f}")
+        print(f"Epoch {epoch} | Loss: {loss:.3f} | Retour Moyen: {ret:.1f} | Durée Moy: {length:.1f}")
+        if epoch % 10 == 0:
+             df_temp = pd.DataFrame(history)
+             csv_temp = os.path.join(analysis_path, "training4_progress.csv") 
+             df_temp.to_csv(csv_temp, index=False)
 
     df = pd.DataFrame(history)
-    csv_target = os.path.join(policy_path, "training2_results.csv") 
+    csv_target = os.path.join(analysis_path, "training4_results.csv") 
     df.to_csv(csv_target, index=False)
     print(f"Données sauvegardées dans {csv_target}")
     endtime = time.time()

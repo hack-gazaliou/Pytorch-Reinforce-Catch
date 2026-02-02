@@ -132,13 +132,38 @@ class engine:
     def reset(self): #reset the game to start a new episode
         self.lives = self.max_lives
         self.paddle_x = 0.5
+        
+        # On vide les listes
         self.fruit_x = []
         self.fruit_y = []
         self.fruit_type = []
+        
+        tiers_ranges = [(0.33, 0.50), (0.50, 0.66), (0.66, 0.9)]
+        
+        for y_min, y_max in tiers_ranges:
+            self.fruit_x.append(rd.random())
+            self.fruit_y.append(rd.uniform(y_min, y_max)) 
+            p_bomb, p_apple, p_mango = self.type_prob()
+            r = rd.random()
+            if r < p_bomb:
+                self.fruit_type.append(-1)
+            elif r < p_bomb + p_apple:
+                self.fruit_type.append(0)
+            else:
+                self.fruit_type.append(1)
+
+        combined = list(zip(self.fruit_y, self.fruit_x, self.fruit_type))
+        combined.sort(key=lambda x: x[0]) 
+        
+        self.fruit_y, self.fruit_x, self.fruit_type = zip(*combined)
+        self.fruit_x = list(self.fruit_x)
+        self.fruit_y = list(self.fruit_y)
+        self.fruit_type = list(self.fruit_type)
+
         self.current_step = 0
         self.score = 0
-        self.lvl = 2#rd.randint(1,3)
-        return self.get_observation() #return the initial observation
+        self.lvl = 2        
+        return self.get_observation() 
            
     def step(self, action):
         reward = 0
@@ -323,8 +348,6 @@ if __name__ == "__main__":
     print("Utilise les Flèches GAUCHE / DROITE pour bouger.")
     
     while running:
-        if env.current_step == 2:
-            env.spawn_fruit()
         
         # 1. Lire le clavier (Human Agent)
         keys = pygame.key.get_pressed()

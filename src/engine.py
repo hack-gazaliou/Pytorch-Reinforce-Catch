@@ -33,59 +33,77 @@ class engine:
         self.max_steps = 500
         self.done = False
   
-    def get_observation(self) :
+    def get_observation(self):
         sorted_indices = np.argsort(self.fruit_y)
         nb_fruits = len(self.fruit_y)
+        
         if nb_fruits > 0:
             idx1 = sorted_indices[0] 
+            t = self.fruit_type[idx1]
             obs_f1 = [
-                self.fruit_x[idx1],     #x
-                self.fruit_y[idx1],     #y
-                self.fruit_type[idx1],  #type
-                1.0                     #presence flag
+                self.fruit_x[idx1],    # x
+                self.fruit_y[idx1],    # y
+                1.0 if t == -1 else 0.0, # is_bomb
+                1.0 if t == 0 else 0.0,  # is_apple
+                1.0 if t == 1 else 0.0,  # is_mango
+                1.0                    # presence flag
             ]
-        else : obs_f1 = [0.0, 0.0, 0.0, 0.0] 
-        
+        else: 
+            obs_f1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Taille 6
+
+        # --- Fruit 2 ---
         if nb_fruits > 1:
             idx2 = sorted_indices[1] 
+            t = self.fruit_type[idx2]
             obs_f2 = [
                 self.fruit_x[idx2], 
                 self.fruit_y[idx2], 
-                self.fruit_type[idx2], 
+                1.0 if t == -1 else 0.0,
+                1.0 if t == 0 else 0.0,
+                1.0 if t == 1 else 0.0,
                 1.0 
             ]
         else:
-            obs_f2 = [0.0, 0.0, 0.0, 0.0]
-                    
+            obs_f2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+        # --- Fruit 3 ---
         if nb_fruits > 2:
             idx3 = sorted_indices[2] 
+            t = self.fruit_type[idx3]
             obs_f3 = [
                 self.fruit_x[idx3], 
                 self.fruit_y[idx3], 
-                self.fruit_type[idx3], 
+                1.0 if t == -1 else 0.0,
+                1.0 if t == 0 else 0.0,
+                1.0 if t == 1 else 0.0,
                 1.0
             ]
         else:
-            obs_f3 = [0.0, 0.0, 0.0, 0.0]   
+            obs_f3 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   
             
+        # --- Fruit 4 ---
         if nb_fruits > 3:
             idx4 = sorted_indices[3] 
+            t = self.fruit_type[idx4]
             obs_f4 = [
                 self.fruit_x[idx4], 
                 self.fruit_y[idx4], 
-                self.fruit_type[idx4], 
+                1.0 if t == -1 else 0.0,
+                1.0 if t == 0 else 0.0,
+                1.0 if t == 1 else 0.0,
                 1.0 
             ]
         else:
-            obs_f4 = [0.0, 0.0, 0.0, 0.0]
+            obs_f4 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         
+        # --- Assemblage ---
         return np.array([
-        self.paddle_x,
-        *obs_f1,
-        *obs_f2,
-        *obs_f3,
-        *obs_f4,
-        self.lives / self.max_lives 
+            self.paddle_x,
+            *obs_f1,
+            *obs_f2,
+            *obs_f3,
+            *obs_f4,
+            self.lives / self.max_lives 
         ])
 
     def type_prob(self):
@@ -119,18 +137,43 @@ class engine:
             case 2 :
                 return 65
             case 3 :
-                return 35
+                return 45
     
-    def reset(self): 
+    def reset(self): #reset the game to start a new episode
         self.lives = self.max_lives
         self.paddle_x = 0.5
+        
+        # On vide les listes
         self.fruit_x = []
         self.fruit_y = []
         self.fruit_type = []
+        
+        tiers_ranges = [(0.33, 0.50), (0.50, 0.66), (0.66, 0.9)]
+        
+        for y_min, y_max in tiers_ranges:
+            self.fruit_x.append(rd.random())
+            self.fruit_y.append(rd.uniform(y_min, y_max)) 
+            p_bomb, p_apple, p_mango = self.type_prob()
+            r = rd.random()
+            if r < p_bomb:
+                self.fruit_type.append(-1)
+            elif r < p_bomb + p_apple:
+                self.fruit_type.append(0)
+            else:
+                self.fruit_type.append(1)
+
+        combined = list(zip(self.fruit_y, self.fruit_x, self.fruit_type))
+        combined.sort(key=lambda x: x[0]) 
+        
+        self.fruit_y, self.fruit_x, self.fruit_type = zip(*combined)
+        self.fruit_x = list(self.fruit_x)
+        self.fruit_y = list(self.fruit_y)
+        self.fruit_type = list(self.fruit_type)
+
         self.current_step = 0
         self.score = 0
-        self.lvl = rd.randint(2,3)
-        return self.get_observation() #return the initial observation
+        self.lvl = 2        
+        return self.get_observation() 
 
            
     def step(self, action):
@@ -148,10 +191,10 @@ class engine:
             if self.fruit_y[0] <= 0.045 and in_paddle:
                     match self.fruit_type[0]:
                         case 1: #mango
-                            reward = 2
+                            reward = 3
                             self.score +=2
                         case 0: #apple
-                            reward = 1
+                            reward = 2
                             self.score+=1
                         case -1: #bomb
                             reward = -3
@@ -182,6 +225,6 @@ class engine:
         if not self.done :
             interval = self.spawn_interval()
             jitter = rd.randint(-5, 5)
-            if self.current_step - self.last_fall >= interval + jitter or self.current_step == 1: #to have a fruit at the beginning
+            if self.current_step - self.last_fall >= interval + jitter :
                 self.spawn_fruit()
         return self.get_observation(), reward, self.done

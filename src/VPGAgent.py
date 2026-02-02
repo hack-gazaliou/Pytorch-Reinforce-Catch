@@ -17,10 +17,10 @@ class VPGAgent(nn.Module) :
         super().__init__()
         self.hidden_sizes = [64, 64]
         self.n_acts = 5
-        self.obs_dim = 18 #4*4 for fruits (x, y, type, flag) + paddle_x + lives/max_lives
+        self.obs_dim = 26 #4*4 for fruits (x, y, type, flag) + paddle_x + lives/max_lives
         self.batch_size = 32 #to change if necessary
         self.policy_net = self.mlp(sizes=[self.obs_dim]+self.hidden_sizes+[self.n_acts], activation=nn.ReLU)
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.01)
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.005)
         self.gamma = 0.99
     
     def get_policy(self,obs):
