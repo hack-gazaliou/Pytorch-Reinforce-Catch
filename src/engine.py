@@ -30,7 +30,7 @@ class engine:
         
         self.current_step  = 0
         self.score = 0
-        self.max_steps = 500
+        self.max_steps = 10000
         self.done = False
   
     def get_observation(self):
@@ -173,7 +173,7 @@ class engine:
         self.current_step = 0
         self.last_fall = 0
         self.score = 0
-        self.lvl = 2        
+        self.lvl = rd.randint(2,3)        
         return self.get_observation() 
 
            
